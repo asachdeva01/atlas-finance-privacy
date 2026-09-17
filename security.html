@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atlas Finance — Information Security Policy</title>
+<style>
+body{margin:0;background:#080807;color:#f2efe6;font:16px/1.6 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:32px 16px}
+main{max-width:760px;margin:0 auto}h1{font-family:Didot,Georgia,serif;font-weight:500;color:#e3c567;letter-spacing:.04em}
+h2{font-family:Georgia,serif;font-weight:500;color:#e3c567;font-size:20px;margin-top:28px}h3{color:#e3c567;font-weight:500;font-size:16px;margin:18px 0 4px}li{margin:6px 0}a{color:#e3c567}.mut{color:#8f8c80;font-size:14px}
+table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #26241d;vertical-align:top}th{color:#8f8c80;font-weight:500}
+</style></head><body><main>
+<h1>Atlas Finance — Information Security Policy</h1>
+<p class="mut">Covers the application registered with Plaid as “Atlas Core Finance”. Effective September 16, 2026. Owner and accountable person: Abhi Sachdeva (<a href="mailto:a.sachdeva2021@gmail.com">a.sachdeva2021@gmail.com</a>). Reviewed every 12 months or on any material change.</p>
+
+<h2>1. Purpose and scope</h2>
+<p>This policy states how consumer financial data obtained through Plaid and Robinhood is protected in Atlas Finance, a private personal finance application operated by one person for the owner and invited household members. It covers the application, its server, the data store, backups, and the people and devices that can reach them. Companion documents: <a href="index.html">Privacy Policy</a> and <a href="retention.html">Data Retention and Disposal Policy</a>.</p>
+
+<h2>2. Access control policy</h2>
+<h3>2.1 Roles (role-based access control)</h3>
+<table><tr><th>Role</th><th>Who</th><th>Can</th><th>Cannot</th></tr>
+<tr><td>Member</td><td>Every application account (owner included)</td><td>Read and manage only their own connected institutions, data, rules, and reports. Every API request is scoped to the signed-in user; requests for another user's records return not-found.</td><td>See, search, or export any other member's data. There is no in-application administrator or superuser role.</td></tr>
+<tr><td>Operator</td><td>The owner, on the server machine only</td><td>Run, update, back up, and de-provision the application via the local shell.</td><td>Read member data through the application; operator work is done at the system level and is audited (see 2.5).</td></tr></table>
+<h3>2.2 Centralized identity and authentication</h3>
+<ul>
+<li>One identity system: the application's own account store. Each member signs in with a password (argon2-hashed) and a WebAuthn passkey (Face ID / Touch ID), which is phishing-resistant multi-factor authentication.</li>
+<li>Step-up: connecting a financial institution requires a passkey verification within the previous five minutes. Without a registered passkey the server refuses to start Plaid Link.</li>
+<li>Network identity: the server is reachable only over Tailscale. Each device holds its own cryptographic node key approved by the owner; there is no public endpoint.</li>
+<li>Non-human access uses OAuth tokens (Plaid, Robinhood) encrypted at rest; the application never stores bank credentials.</li></ul>
+<h3>2.3 Zero-trust architecture</h3>
+<ul>
+<li>No implicit trust from network location: the application binds to localhost and is exposed only through Tailscale's TLS proxy; every request must carry a valid short-lived session cookie and a CSRF header.</li>
+<li>Least privilege by construction: every query is filtered by the requesting user's id; sessions expire (access 15 minutes, refresh 30 days, rotated on use); sensitive actions require step-up authentication.</li>
+<li>Read-only integrations: the Robinhood integration enforces an allow-list of read tools and cannot place, modify, or cancel orders; Plaid products are limited to Transactions, Investments, and Liabilities.</li></ul>
+<h3>2.4 Provisioning and de-provisioning</h3>
+<ul>
+<li>Accounts are created only with an invite code issued by the owner.</li>
+<li>De-provisioning is automated and atomic: deactivating an account revokes every session and passkey and removes every connected institution (Plaid item removal, token deletion, data cascade). It runs automatically for any account with no sign-in for 180 days, and on request for departed household members.</li></ul>
+<h3>2.5 Periodic access reviews and audits</h3>
+<ul>
+<li>A monthly automated access review lists every account, its factors, live sessions, last sign-in, and institutions; revokes sessions older than 30 days; flags accounts inactive for 90 days; de-provisions at 180. Each review is written to a dated report kept with the application's journal, and recorded in the audit log.</li>
+<li>All authentication events, connections, disconnections, gate changes, and de-provisioning are written to an append-only audit log with timestamp and source address. Sign-in events are retained 90 days; money-adjacent entries for the life of the account.</li></ul>
+
+<h2>3. Data protection</h2>
+<ul>
+<li>In transit: TLS 1.2 or better for every client–server and server–provider connection.</li>
+<li>At rest: institution tokens encrypted with a server-held key (Fernet); the server disk is fully encrypted (FileVault). Backups are taken nightly, stay on the encrypted disk, and expire after 30 days.</li>
+<li>Minimization: only the data needed to display the member's own finances is requested or stored. Numbers, never credentials or tokens, are sent to the AI provider that writes reports.</li></ul>
+
+<h2>4. Development and vulnerability management</h2>
+<ul>
+<li>Dependencies are scanned weekly (pip-audit for the backend, npm audit for the frontend) by a scheduled job that writes a dated report. Critical and high findings are patched within 7 days, moderate within 30, low at the next release.</li>
+<li>Runtimes (Python, Node, macOS) are kept on supported, non-end-of-life versions; the operating system auto-updates.</li>
+<li>All changes are version-controlled; secrets live only in environment files excluded from the repository; the automated test suite runs before each deployment.</li></ul>
+
+<h2>5. Incident response</h2>
+<ul>
+<li>On suspected compromise: rotate the Plaid and Robinhood credentials, revoke all sessions, review the audit log, and notify affected members within 72 hours. Plaid is notified through the dashboard support channel.</li></ul>
+
+<h2>6. Review</h2>
+<p>This policy and the evidence it references (access-review and vulnerability-scan reports) are reviewed by the owner every 12 months, and whenever products, integrations, or hosting change.</p>
+</main></body></html>

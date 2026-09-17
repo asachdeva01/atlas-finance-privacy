@@ -17,7 +17,7 @@ table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;p
 <tr><td>Balances, holdings, transactions, liabilities</td><td>the institution is connected</td><td>same as above; deleted in the same operation as the token</td></tr>
 <tr><td>Account profile (name, email, phone)</td><td>the account exists</td><td>the account is deleted</td></tr>
 <tr><td>Reports and summaries written for the user</td><td>the account exists</td><td>the account is deleted</td></tr>
-<tr><td>Sign-in and audit log</td><td>90 days</td><td>rolling deletion after 90 days</td></tr>
+<tr><td>Sign-in events in the audit log</td><td>90 days</td><td>rolling deletion after 90 days (money-adjacent audit entries are kept for the life of the account)</td></tr>
 <tr><td>Encrypted backups</td><td>30 days</td><td>rolling expiry after 30 days</td></tr></table>
 <h2>3. Disposal</h2>
 <ul>
